@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Performance Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0eeff;
+    --surface: #ffffff;
+    --surface2: #f5f3ff;
+    --border: #e4e0f7;
+    --purple-dark: #2d2060;
+    --purple: #6b58d0;
+    --purple-mid: #9d8fe8;
+    --purple-light: #c4b9f7;
+    --purple-xlight: #ede8ff;
+    --red: #e24b4a;
+    --amber: #ef9f27;
+    --green: #639922;
+    --text: #2d2060;
+    --text-mid: #6b6490;
+    --text-dim: #a09ac4;
+    --font: 'Inter', sans-serif;
+    --radius: 16px;
+    --shadow: 0 1px 3px rgba(45,32,96,0.06), 0 4px 16px rgba(45,32,96,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--purple-dark);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-icon { font-size: 20px; }
+  .header-title { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
+  .header-sub { font-size: 11px; color: var(--purple-light); margin-top: 2px; }
+  .nav { display: flex; gap: 4px; }
+  .nav-btn { padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 500; transition: all 0.2s; color: var(--purple-light); background: transparent; }
+  .nav-btn.active { background: rgba(255,255,255,0.15); color: #fff; }
+  .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.08); color: #fff; }
+
+  /* FILTERS */
+  .filters-bar {
+    padding: 14px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .filter-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-right: 2px; font-weight: 500; }
+  .filter-group { display: flex; gap: 6px; }
+  .pill {
+    padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+    font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.18s;
+    background: var(--surface); color: var(--text-mid); font-family: var(--font);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .pill:hover { border-color: var(--purple-mid); color: var(--purple); }
+  .pill.active { background: var(--purple-dark); border-color: var(--purple-dark); color: #fff; }
+  .pill.low.active { background: var(--red); border-color: var(--red); }
+  .pill.medium.active { background: var(--amber); border-color: var(--amber); color: #fff; }
+  .pill.high.active { background: var(--green); border-color: var(--green); }
+  .divider { width: 1px; height: 22px; background: var(--border); margin: 0 6px; }
+  .profile-strip {
+    margin-left: auto; font-size: 11px; font-weight: 500; color: var(--purple);
+    background: var(--purple-xlight); border: 1px solid var(--purple-light);
+    padding: 6px 14px; border-radius: 20px;
+  }
+
+  /* MAIN */
+  .main { padding: 22px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* KPI ROW */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+    box-shadow: var(--shadow); transition: box-shadow 0.2s;
+  }
+  .kpi:hover { box-shadow: 0 4px 20px rgba(45,32,96,0.1); }
+  .kpi-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 600; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: var(--purple-dark); letter-spacing: -0.03em; line-height: 1; }
+  .kpi-delta { font-size: 10px; margin-top: 6px; color: var(--text-dim); font-weight: 500; }
+  .kpi-delta.warn { color: var(--red); }
+  .kpi-delta.good { color: var(--green); }
+
+  /* CHARTS */
+  .charts-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+  .charts-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; font-weight: 600; }
+
+  /* SCATTER */
+  canvas { display: block; }
+  .scatter-legend { display: flex; gap: 16px; margin-top: 10px; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-mid); font-weight: 500; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* BAR */
+  .bar-list { display: flex; flex-direction: column; gap: 11px; }
+  .bar-item { display: flex; align-items: center; gap: 10px; }
+  .bar-name { font-size: 11px; color: var(--text-mid); width: 76px; text-align: right; flex-shrink: 0; font-weight: 500; }
+  .bar-track { flex: 1; height: 8px; background: var(--purple-xlight); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--purple); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .bar-val { font-size: 11px; color: var(--text-mid); font-weight: 600; width: 28px; }
+
+  /* DONUT */
+  .donut-wrap { display: flex; align-items: center; gap: 18px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 9px; }
+  .donut-leg-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-mid); font-weight: 500; }
+  .donut-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  /* GROUPED BAR */
+  .grouped-list { display: flex; flex-direction: column; gap: 12px; }
+  .grouped-cat { font-size: 10px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .grouped-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .grouped-label { font-size: 10px; color: var(--text-dim); width: 64px; flex-shrink: 0; font-weight: 500; }
+  .grouped-track { flex: 1; height: 7px; background: var(--purple-xlight); border-radius: 3px; overflow: hidden; }
+  .grouped-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .grouped-val { font-size: 10px; color: var(--text-dim); font-weight: 600; width: 24px; }
+
+  /* DOOM */
+  .doom-wrap { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+  .doom-card { background: var(--surface2); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); flex: 1; }
+  .doom-label { font-size: 10px; color: var(--text-dim); font-weight: 600; margin-bottom: 6px; }
+  .doom-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+  .doom-diff { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">📊</div>
+    <div>
+      <div class="header-title">Student Performance Analytics</div>
+      <div class="header-sub">3,000 students</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="filters-bar">
+  <span class="filter-label">performance</span>
+  <div class="filter-group" id="perf-filters">
+    <button class="pill active" data-perf="All">All</button>
+    <button class="pill low" data-perf="Low">🔴 Low</button>
+    <button class="pill medium" data-perf="Medium">🟡 Medium</button>
+    <button class="pill high" data-perf="High">🟢 High</button>
+  </div>
+  <div class="divider"></div>
+  <span class="filter-label">city</span>
+  <div class="filter-group" id="city-filters">
+    <button class="pill active" data-city="All">All</button>
+    <button class="pill" data-city="Urban">Urban</button>
+    <button class="pill" data-city="Rural">Rural</button>
+    <button class="pill" data-city="Semi-Urban">Semi-Urban</button>
+  </div>
+  <div class="profile-strip" id="profile-strip">▸ 4.0h study · 6.5h sleep · 2.9h social media</div>
+</div>
+
+<div class="main">
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">avg exam score</div>
+      <div class="kpi-value" id="kpi-exam">54.8</div>
+      <div class="kpi-delta" id="kpi-exam-d">all students</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">avg study hrs/day</div>
+      <div class="kpi-value" id="kpi-study">4.0h</div>
+      <div class="kpi-delta">daily average</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">high burnout risk</div>
+      <div class="kpi-value" id="kpi-burnout">29.8%</div>
+      <div class="kpi-delta warn" id="kpi-burnout-d">burnout score ≥ 8</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">doomscroll impact</div>
+      <div class="kpi-value" id="kpi-doom">−5.2</div>
+      <div class="kpi-delta warn">pts lost before sleep</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">focused students</div>
+      <div class="kpi-value" id="kpi-focused">24.6%</div>
+      <div class="kpi-delta good">mental state: focused</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title">does more study time = better grades?</div>
+      <canvas id="scatter" width="520" height="230"></canvas>
+      <div class="scatter-legend">
+        <div class="leg"><div class="leg-dot" style="background:#e24b4a"></div>Low</div>
+        <div class="leg"><div class="leg-dot" style="background:#9d8fe8"></div>Medium</div>
+        <div class="leg"><div class="leg-dot" style="background:#639922"></div>High</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">avg exam score by career goal</div>
+      <div class="bar-list" id="career-bars"></div>
+    </div>
+  </div>
+
+  <div class="charts-bottom">
+    <div class="card">
+      <div class="card-title">mental state distribution</div>
+      <div class="donut-wrap">
+        <canvas id="donut" width="120" height="120"></canvas>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">stress vs motivation by performance</div>
+      <div class="grouped-list" id="stress-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">doomscrolling before sleep</div>
+      <div class="doom-wrap" id="doom-cards"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW = {"kpis":{"avg_exam_score":54.8,"avg_study_hours":4.0,"pct_high_burnout":29.8,"doomscroll_impact":5.2,"pct_focused":24.6},"perf_stats":{"Low":{"avg_exam":36.6,"avg_study":3.5,"avg_sleep":6.4,"avg_social":3.2,"avg_stress":6.1,"avg_motivation":4.9,"pct_burnout_high":39.4,"doomscroll_nodoom":37.4,"doomscroll_doom":36.0},"Medium":{"avg_exam":61.1,"avg_study":4.2,"avg_sleep":6.5,"avg_social":2.9,"avg_stress":5.3,"avg_motivation":5.7,"pct_burnout_high":25.6,"doomscroll_nodoom":61.4,"doomscroll_doom":60.7},"High":{"avg_exam":84.5,"avg_study":4.7,"avg_sleep":6.7,"avg_social":2.5,"avg_stress":4.7,"avg_motivation":6.6,"pct_burnout_high":17.1,"doomscroll_nodoom":85.1,"doomscroll_doom":83.6}},"career":{"Medical":55.6,"Research":55.0,"Business":54.7,"Arts":54.5,"Engineering":54.2},"mental":{"Distracted":790,"Burnout":755,"Focused":739,"Balanced":716},"stress_motiv":{"Low":{"stress":6.1,"motivation":4.9},"Medium":{"stress":5.3,"motivation":5.7},"High":{"stress":4.7,"motivation":6.6}},"scatter":[{"x":3.9,"y":44,"cat":"Low","city":"Semi-Urban"},{"x":7.1,"y":72,"cat":"Medium","city":"Semi-Urban"},{"x":3.2,"y":55,"cat":"Medium","city":"Rural"},{"x":3.5,"y":51,"cat":"Medium","city":"Urban"},{"x":3.3,"y":44,"cat":"Low","city":"Urban"},{"x":3.4,"y":51,"cat":"Medium","city":"Rural"},{"x":5.4,"y":88,"cat":"High","city":"Semi-Urban"},{"x":6.5,"y":44,"cat":"Low","city":"Semi-Urban"},{"x":7.0,"y":71,"cat":"Medium","city":"Rural"},{"x":6.9,"y":53,"cat":"Medium","city":"Rural"},{"x":4.5,"y":49,"cat":"Low","city":"Rural"},{"x":4.4,"y":60,"cat":"Medium","city":"Urban"},{"x":3.8,"y":36,"cat":"Low","city":"Rural"},{"x":5.8,"y":57,"cat":"Medium","city":"Semi-Urban"},{"x":5.0,"y":35,"cat":"Low","city":"Rural"},{"x":3.6,"y":55,"cat":"Medium","city":"Rural"},{"x":5.4,"y":59,"cat":"Medium","city":"Semi-Urban"},{"x":4.9,"y":15,"cat":"Low","city":"Rural"},{"x":5.0,"y":58,"cat":"Medium","city":"Rural"},{"x":3.0,"y":100,"cat":"High","city":"Urban"},{"x":3.7,"y":59,"cat":"Medium","city":"Rural"},{"x":5.6,"y":48,"cat":"Low","city":"Semi-Urban"},{"x":6.4,"y":63,"cat":"Medium","city":"Rural"},{"x":2.3,"y":52,"cat":"Medium","city":"Rural"},{"x":3.9,"y":39,"cat":"Low","city":"Rural"},{"x":3.4,"y":73,"cat":"Medium","city":"Semi-Urban"},{"x":2.4,"y":97,"cat":"High","city":"Semi-Urban"},{"x":5.4,"y":63,"cat":"Medium","city":"Urban"},{"x":3.2,"y":51,"cat":"Medium","city":"Urban"},{"x":5.0,"y":76,"cat":"High","city":"Rural"},{"x":3.8,"y":31,"cat":"Low","city":"Semi-Urban"},{"x":3.6,"y":47,"cat":"Low","city":"Semi-Urban"},{"x":2.9,"y":54,"cat":"Medium","city":"Rural"},{"x":4.1,"y":40,"cat":"Low","city":"Rural"},{"x":3.5,"y":12,"cat":"Low","city":"Semi-Urban"},{"x":6.5,"y":49,"cat":"Low","city":"Rural"},{"x":0.9,"y":40,"cat":"Low","city":"Rural"},{"x":2.1,"y":48,"cat":"Low","city":"Urban"},{"x":6.5,"y":68,"cat":"Medium","city":"Rural"},{"x":2.0,"y":0,"cat":"Low","city":"Semi-Urban"},{"x":7.4,"y":83,"cat":"High","city":"Semi-Urban"},{"x":5.8,"y":69,"cat":"Medium","city":"Urban"},{"x":2.3,"y":77,"cat":"High","city":"Rural"},{"x":4.2,"y":67,"cat":"Medium","city":"Semi-Urban"},{"x":2.2,"y":66,"cat":"Medium","city":"Rural"},{"x":2.1,"y":51,"cat":"Medium","city":"Rural"},{"x":3.4,"y":63,"cat":"Medium","city":"Rural"},{"x":1.7,"y":16,"cat":"Low","city":"Urban"},{"x":3.4,"y":50,"cat":"Medium","city":"Urban"},{"x":4.6,"y":38,"cat":"Low","city":"Rural"},{"x":3.5,"y":28,"cat":"Low","city":"Urban"},{"x":0.6,"y":19,"cat":"Low","city":"Semi-Urban"},{"x":3.8,"y":70,"cat":"Medium","city":"Urban"},{"x":4.3,"y":97,"cat":"High","city":"Urban"},{"x":2.4,"y":51,"cat":"Medium","city":"Rural"},{"x":5.2,"y":38,"cat":"Low","city":"Rural"},{"x":4.4,"y":89,"cat":"High","city":"Semi-Urban"},{"x":4.3,"y":56,"cat":"Medium","city":"Rural"},{"x":5.0,"y":54,"cat":"Medium","city":"Rural"},{"x":3.9,"y":50,"cat":"Medium","city":"Rural"},{"x":4.0,"y":60,"cat":"Medium","city":"Urban"},{"x":3.0,"y":54,"cat":"Medium","city":"Semi-Urban"},{"x":2.9,"y":48,"cat":"Low","city":"Rural"},{"x":3.1,"y":48,"cat":"Low","city":"Urban"},{"x":3.4,"y":96,"cat":"High","city":"Urban"},{"x":2.9,"y":79,"cat":"High","city":"Semi-Urban"},{"x":5.5,"y":63,"cat":"Medium","city":"Rural"},{"x":2.0,"y":51,"cat":"Medium","city":"Semi-Urban"},{"x":2.1,"y":39,"cat":"Low","city":"Rural"},{"x":4.1,"y":62,"cat":"Medium","city":"Rural"},{"x":4.2,"y":77,"cat":"High","city":"Urban"},{"x":4.6,"y":57,"cat":"Medium","city":"Urban"},{"x":4.3,"y":87,"cat":"High","city":"Rural"},{"x":4.6,"y":54,"cat":"Medium","city":"Urban"},{"x":2.3,"y":72,"cat":"Medium","city":"Rural"},{"x":3.9,"y":64,"cat":"Medium","city":"Semi-Urban"},{"x":4.8,"y":39,"cat":"Low","city":"Semi-Urban"},{"x":3.8,"y":42,"cat":"Low","city":"Urban"},{"x":3.5,"y":34,"cat":"Low","city":"Rural"},{"x":1.7,"y":29,"cat":"Low","city":"Urban"},{"x":3.9,"y":34,"cat":"Low","city":"Semi-Urban"},{"x":4.4,"y":79,"cat":"High","city":"Rural"},{"x":6.1,"y":59,"cat":"Medium","city":"Rural"},{"x":4.2,"y":55,"cat":"Medium","city":"Rural"},{"x":4.4,"y":77,"cat":"High","city":"Semi-Urban"},{"x":6.0,"y":59,"cat":"Medium","city":"Urban"},{"x":2.8,"y":42,"cat":"Low","city":"Semi-Urban"},{"x":2.9,"y":35,"cat":"Low","city":"Urban"},{"x":5.2,"y":35,"cat":"Low","city":"Rural"},{"x":5.9,"y":55,"cat":"Medium","city":"Semi-Urban"},{"x":3.4,"y":35,"cat":"Low","city":"Rural"},{"x":2.4,"y":36,"cat":"Low","city":"Urban"},{"x":2.0,"y":40,"cat":"Low","city":"Rural"},{"x":3.1,"y":63,"cat":"Medium","city":"Urban"},{"x":3.4,"y":54,"cat":"Medium","city":"Rural"},{"x":4.5,"y":68,"cat":"Medium","city":"Rural"},{"x":5.3,"y":68,"cat":"Medium","city":"Semi-Urban"},{"x":4.4,"y":58,"cat":"Medium","city":"Semi-Urban"},{"x":4.1,"y":50,"cat":"Medium","city":"Urban"},{"x":6.4,"y":79,"cat":"High","city":"Urban"},{"x":6.7,"y":73,"cat":"Medium","city":"Urban"},{"x":4.4,"y":55,"cat":"Medium","city":"Semi-Urban"},{"x":4.6,"y":55,"cat":"Medium","city":"Urban"},{"x":2.7,"y":25,"cat":"Low","city":"Rural"},{"x":2.0,"y":80,"cat":"High","city":"Semi-Urban"},{"x":4.3,"y":54,"cat":"Medium","city":"Rural"},{"x":6.7,"y":70,"cat":"Medium","city":"Semi-Urban"},{"x":2.2,"y":69,"cat":"Medium","city":"Urban"},{"x":0.6,"y":40,"cat":"Low","city":"Urban"},{"x":6.1,"y":61,"cat":"Medium","city":"Semi-Urban"},{"x":6.0,"y":49,"cat":"Low","city":"Urban"},{"x":4.3,"y":75,"cat":"High","city":"Rural"},{"x":3.9,"y":66,"cat":"Medium","city":"Urban"},{"x":3.3,"y":70,"cat":"Medium","city":"Rural"},{"x":7.4,"y":63,"cat":"Medium","city":"Semi-Urban"},{"x":4.5,"y":40,"cat":"Low","city":"Urban"},{"x":3.2,"y":32,"cat":"Low","city":"Semi-Urban"},{"x":5.3,"y":45,"cat":"Low","city":"Rural"},{"x":2.0,"y":22,"cat":"Low","city":"Semi-Urban"},{"x":3.0,"y":39,"cat":"Low","city":"Semi-Urban"},{"x":3.3,"y":53,"cat":"Medium","city":"Semi-Urban"},{"x":4.1,"y":28,"cat":"Low","city":"Semi-Urban"},{"x":2.1,"y":41,"cat":"Low","city":"Rural"},{"x":5.5,"y":72,"cat":"Medium","city":"Semi-Urban"},{"x":1.6,"y":25,"cat":"Low","city":"Semi-Urban"},{"x":1.9,"y":48,"cat":"Low","city":"Semi-Urban"},{"x":2.6,"y":64,"cat":"Medium","city":"Semi-Urban"},{"x":1.1,"y":64,"cat":"Medium","city":"Rural"},{"x":1.4,"y":31,"cat":"Low","city":"Urban"},{"x":5.0,"y":25,"cat":"Low","city":"Semi-Urban"},{"x":2.9,"y":32,"cat":"Low","city":"Urban"},{"x":5.7,"y":71,"cat":"Medium","city":"Rural"},{"x":4.2,"y":43,"cat":"Low","city":"Rural"},{"x":5.1,"y":59,"cat":"Medium","city":"Urban"},{"x":4.3,"y":43,"cat":"Low","city":"Urban"},{"x":3.6,"y":44,"cat":"Low","city":"Urban"},{"x":5.9,"y":57,"cat":"Medium","city":"Urban"},{"x":2.3,"y":41,"cat":"Low","city":"Rural"},{"x":3.1,"y":79,"cat":"High","city":"Rural"},{"x":4.7,"y":32,"cat":"Low","city":"Semi-Urban"},{"x":5.3,"y":40,"cat":"Low","city":"Rural"},{"x":2.3,"y":62,"cat":"Medium","city":"Semi-Urban"},{"x":3.2,"y":78,"cat":"High","city":"Urban"},{"x":4.7,"y":80,"cat":"High","city":"Semi-Urban"},{"x":3.8,"y":72,"cat":"Medium","city":"Urban"},{"x":3.7,"y":34,"cat":"Low","city":"Rural"},{"x":3.4,"y":65,"cat":"Medium","city":"Urban"},{"x":5.5,"y":54,"cat":"Medium","city":"Semi-Urban"},{"x":2.8,"y":48,"cat":"Low","city":"Semi-Urban"},{"x":4.4,"y":34,"cat":"Low","city":"Rural"},{"x":3.3,"y":60,"cat":"Medium","city":"Rural"},{"x":3.6,"y":59,"cat":"Medium","city":"Semi-Urban"},{"x":4.5,"y":37,"cat":"Low","city":"Rural"},{"x":1.7,"y":41,"cat":"Low","city":"Semi-Urban"},{"x":2.5,"y":53,"cat":"Medium","city":"Rural"},{"x":2.4,"y":61,"cat":"Medium","city":"Urban"},{"x":5.4,"y":86,"cat":"High","city":"Urban"},{"x":3.1,"y":50,"cat":"Medium","city":"Urban"},{"x":4.2,"y":31,"cat":"Low","city":"Urban"},{"x":2.5,"y":32,"cat":"Low","city":"Rural"},{"x":4.7,"y":77,"cat":"High","city":"Rural"},{"x":3.4,"y":72,"cat":"Medium","city":"Rural"},{"x":2.0,"y":62,"cat":"Medium","city":"Semi-Urban"},{"x":3.9,"y":70,"cat":"Medium","city":"Rural"},{"x":4.9,"y":47,"cat":"Low","city":"Semi-Urban"},{"x":2.7,"y":53,"cat":"Medium","city":"Urban"},{"x":2.7,"y":75,"cat":"High","city":"Urban"},{"x":1.0,"y":51,"cat":"Medium","city":"Urban"},{"x":7.9,"y":63,"cat":"Medium","city":"Rural"},{"x":2.0,"y":37,"cat":"Low","city":"Rural"},{"x":3.8,"y":68,"cat":"Medium","city":"Rural"},{"x":6.4,"y":54,"cat":"Medium","city":"Semi-Urban"},{"x":5.1,"y":91,"cat":"High","city":"Semi-Urban"},{"x":3.8,"y":35,"cat":"Low","city":"Semi-Urban"},{"x":4.4,"y":53,"cat":"Medium","city":"Urban"},{"x":6.0,"y":80,"cat":"High","city":"Rural"},{"x":2.6,"y":63,"cat":"Medium","city":"Semi-Urban"},{"x":4.4,"y":73,"cat":"Medium","city":"Urban"},{"x":3.1,"y":36,"cat":"Low","city":"Rural"},{"x":3.1,"y":33,"cat":"Low","city":"Urban"},{"x":6.4,"y":53,"cat":"Medium","city":"Urban"},{"x":5.8,"y":84,"cat":"High","city":"Rural"},{"x":2.9,"y":45,"cat":"Low","city":"Rural"},{"x":3.6,"y":49,"cat":"Low","city":"Urban"},{"x":4.0,"y":60,"cat":"Medium","city":"Semi-Urban"},{"x":3.5,"y":66,"cat":"Medium","city":"Urban"},{"x":7.0,"y":78,"cat":"High","city":"Semi-Urban"},{"x":4.7,"y":75,"cat":"High","city":"Rural"},{"x":2.9,"y":38,"cat":"Low","city":"Semi-Urban"},{"x":3.3,"y":47,"cat":"Low","city":"Rural"},{"x":2.2,"y":53,"cat":"Medium","city":"Urban"},{"x":7.8,"y":68,"cat":"Medium","city":"Urban"},{"x":1.8,"y":59,"cat":"Medium","city":"Semi-Urban"},{"x":3.4,"y":90,"cat":"High","city":"Semi-Urban"},{"x":4.4,"y":76,"cat":"High","city":"Semi-Urban"},{"x":5.3,"y":46,"cat":"Low","city":"Semi-Urban"},{"x":0.9,"y":33,"cat":"Low","city":"Urban"},{"x":3.1,"y":77,"cat":"High","city":"Semi-Urban"},{"x":2.8,"y":50,"cat":"Medium","city":"Rural"},{"x":3.9,"y":84,"cat":"High","city":"Semi-Urban"},{"x":6.2,"y":76,"cat":"High","city":"Urban"},{"x":2.5,"y":57,"cat":"Medium","city":"Rural"},{"x":6.0,"y":42,"cat":"Low","city":"Urban"},{"x":4.7,"y":34,"cat":"Low","city":"Urban"},{"x":4.9,"y":50,"cat":"Medium","city":"Rural"},{"x":1.9,"y":23,"cat":"Low","city":"Semi-Urban"},{"x":5.4,"y":67,"cat":"Medium","city":"Rural"},{"x":2.7,"y":67,"cat":"Medium","city":"Semi-Urban"},{"x":3.8,"y":63,"cat":"Medium","city":"Semi-Urban"},{"x":4.6,"y":43,"cat":"Low","city":"Semi-Urban"},{"x":5.8,"y":42,"cat":"Low","city":"Rural"},{"x":3.1,"y":69,"cat":"Medium","city":"Rural"},{"x":2.1,"y":60,"cat":"Medium","city":"Rural"},{"x":4.7,"y":73,"cat":"Medium","city":"Rural"},{"x":5.9,"y":17,"cat":"Low","city":"Rural"},{"x":1.9,"y":27,"cat":"Low","city":"Rural"},{"x":5.5,"y":61,"cat":"Medium","city":"Semi-Urban"},{"x":4.1,"y":41,"cat":"Low","city":"Urban"},{"x":3.4,"y":32,"cat":"Low","city":"Urban"},{"x":5.0,"y":74,"cat":"Medium","city":"Urban"},{"x":1.9,"y":35,"cat":"Low","city":"Rural"},{"x":4.0,"y":61,"cat":"Medium","city":"Rural"},{"x":6.4,"y":100,"cat":"High","city":"Rural"},{"x":3.1,"y":57,"cat":"Medium","city":"Urban"},{"x":5.4,"y":34,"cat":"Low","city":"Urban"},{"x":3.0,"y":48,"cat":"Low","city":"Semi-Urban"},{"x":2.5,"y":33,"cat":"Low","city":"Rural"},{"x":3.9,"y":57,"cat":"Medium","city":"Rural"},{"x":5.3,"y":62,"cat":"Medium","city":"Semi-Urban"},{"x":5.5,"y":67,"cat":"Medium","city":"Semi-Urban"},{"x":2.9,"y":64,"cat":"Medium","city":"Rural"},{"x":2.8,"y":81,"cat":"High","city":"Semi-Urban"},{"x":3.5,"y":31,"cat":"Low","city":"Semi-Urban"},{"x":0.7,"y":34,"cat":"Low","city":"Urban"},{"x":1.7,"y":64,"cat":"Medium","city":"Urban"},{"x":5.5,"y":71,"cat":"Medium","city":"Rural"},{"x":5.0,"y":28,"cat":"Low","city":"Rural"},{"x":4.5,"y":40,"cat":"Low","city":"Urban"},{"x":4.2,"y":37,"cat":"Low","city":"Urban"},{"x":4.7,"y":61,"cat":"Medium","city":"Rural"},{"x":5.5,"y":62,"cat":"Medium","city":"Rural"},{"x":4.9,"y":96,"cat":"High","city":"Urban"},{"x":2.4,"y":41,"cat":"Low","city":"Urban"},{"x":4.3,"y":35,"cat":"Low","city":"Rural"},{"x":4.9,"y":51,"cat":"Medium","city":"Rural"},{"x":4.5,"y":46,"cat":"Low","city":"Semi-Urban"},{"x":5.5,"y":39,"cat":"Low","city":"Urban"},{"x":1.9,"y":46,"cat":"Low","city":"Semi-Urban"},{"x":4.1,"y":38,"cat":"Low","city":"Semi-Urban"},{"x":7.1,"y":87,"cat":"High","city":"Urban"},{"x":5.5,"y":57,"cat":"Medium","city":"Urban"},{"x":5.2,"y":86,"cat":"High","city":"Urban"},{"x":3.5,"y":37,"cat":"Low","city":"Urban"},{"x":4.6,"y":54,"cat":"Medium","city":"Rural"},{"x":3.3,"y":27,"cat":"Low","city":"Semi-Urban"},{"x":3.1,"y":7,"cat":"Low","city":"Urban"},{"x":2.1,"y":40,"cat":"Low","city":"Semi-Urban"},{"x":5.7,"y":52,"cat":"Medium","city":"Rural"},{"x":3.0,"y":32,"cat":"Low","city":"Semi-Urban"},{"x":5.5,"y":29,"cat":"Low","city":"Semi-Urban"},{"x":3.9,"y":27,"cat":"Low","city":"Rural"},{"x":1.7,"y":41,"cat":"Low","city":"Semi-Urban"},{"x":2.9,"y":59,"cat":"Medium","city":"Rural"},{"x":4.7,"y":55,"cat":"Medium","city":"Rural"},{"x":5.6,"y":67,"cat":"Medium","city":"Semi-Urban"},{"x":5.1,"y":74,"cat":"Medium","city":"Urban"},{"x":6.2,"y":82,"cat":"High","city":"Semi-Urban"},{"x":5.5,"y":29,"cat":"Low","city":"Urban"},{"x":4.6,"y":66,"cat":"Medium","city":"Semi-Urban"},{"x":4.7,"y":63,"cat":"Medium","city":"Semi-Urban"},{"x":4.8,"y":90,"cat":"High","city":"Urban"},{"x":5.6,"y":70,"cat":"Medium","city":"Semi-Urban"},{"x":4.5,"y":20,"cat":"Low","city":"Semi-Urban"},{"x":5.5,"y":91,"cat":"High","city":"Urban"},{"x":5.1,"y":68,"cat":"Medium","city":"Rural"},{"x":3.4,"y":60,"cat":"Medium","city":"Urban"},{"x":2.1,"y":29,"cat":"Low","city":"Semi-Urban"},{"x":5.4,"y":40,"cat":"Low","city":"Urban"},{"x":1.6,"y":6,"cat":"Low","city":"Rural"},{"x":7.2,"y":69,"cat":"Medium","city":"Urban"},{"x":3.1,"y":47,"cat":"Low","city":"Urban"},{"x":5.6,"y":40,"cat":"Low","city":"Rural"},{"x":2.8,"y":75,"cat":"High","city":"Urban"},{"x":3.3,"y":52,"cat":"Medium","city":"Rural"},{"x":5.3,"y":53,"cat":"Medium","city":"Urban"},{"x":0.5,"y":63,"cat":"Medium","city":"Urban"},{"x":4.3,"y":73,"cat":"Medium","city":"Urban"},{"x":3.0,"y":53,"cat":"Medium","city":"Urban"},{"x":1.8,"y":59,"cat":"Medium","city":"Rural"},{"x":2.8,"y":20,"cat":"Low","city":"Rural"},{"x":2.1,"y":35,"cat":"Low","city":"Urban"},{"x":6.0,"y":82,"cat":"High","city":"Rural"},{"x":1.5,"y":30,"cat":"Low","city":"Semi-Urban"},{"x":4.8,"y":46,"cat":"Low","city":"Rural"},{"x":3.9,"y":53,"cat":"Medium","city":"Semi-Urban"},{"x":1.5,"y":20,"cat":"Low","city":"Rural"},{"x":3.4,"y":62,"cat":"Medium","city":"Urban"},{"x":4.7,"y":58,"cat":"Medium","city":"Semi-Urban"},{"x":5.1,"y":31,"cat":"Low","city":"Urban"},{"x":6.8,"y":94,"cat":"High","city":"Semi-Urban"}]};
+
+const perfColors = { Low:'#e24b4a', Medium:'#9d8fe8', High:'#639922' };
+
+const COMBOS = {"All":{"All":{"avg_exam":54.8,"avg_study":4.0,"avg_sleep":6.5,"avg_social":2.9,"pct_burnout_high":29.8,"doomscroll_nodoom":57.3,"doomscroll_doom":52.2,"pct_focused":24.6},"Urban":{"avg_exam":54.6,"avg_study":4.0,"avg_sleep":6.6,"avg_social":3.0,"pct_burnout_high":30.7,"doomscroll_nodoom":56.8,"doomscroll_doom":52.4,"pct_focused":24.5},"Rural":{"avg_exam":55.8,"avg_study":4.0,"avg_sleep":6.5,"avg_social":2.9,"pct_burnout_high":30.1,"doomscroll_nodoom":58.6,"doomscroll_doom":52.9,"pct_focused":25.4},"Semi-Urban":{"avg_exam":53.9,"avg_study":3.9,"avg_sleep":6.5,"avg_social":2.9,"pct_burnout_high":28.7,"doomscroll_nodoom":56.6,"doomscroll_doom":51.2,"pct_focused":24.0}},"Low":{"All":{"avg_exam":36.6,"avg_study":3.5,"avg_sleep":6.4,"avg_social":3.2,"pct_burnout_high":39.4,"doomscroll_nodoom":37.4,"doomscroll_doom":36.0,"pct_focused":14.2},"Urban":{"avg_exam":37.2,"avg_study":3.6,"avg_sleep":6.5,"avg_social":3.3,"pct_burnout_high":40.8,"doomscroll_nodoom":37.7,"doomscroll_doom":36.8,"pct_focused":13.4},"Rural":{"avg_exam":36.3,"avg_study":3.5,"avg_sleep":6.4,"avg_social":3.2,"pct_burnout_high":42.9,"doomscroll_nodoom":36.8,"doomscroll_doom":36.0,"pct_focused":14.8},"Semi-Urban":{"avg_exam":36.3,"avg_study":3.5,"avg_sleep":6.4,"avg_social":3.1,"pct_burnout_high":35.0,"doomscroll_nodoom":37.6,"doomscroll_doom":35.2,"pct_focused":14.4}},"Medium":{"All":{"avg_exam":61.1,"avg_study":4.2,"avg_sleep":6.5,"avg_social":2.9,"pct_burnout_high":25.6,"doomscroll_nodoom":61.4,"doomscroll_doom":60.7,"pct_focused":27.4},"Urban":{"avg_exam":60.9,"avg_study":4.2,"avg_sleep":6.7,"avg_social":3.0,"pct_burnout_high":26.9,"doomscroll_nodoom":61.0,"doomscroll_doom":60.7,"pct_focused":28.7},"Rural":{"avg_exam":61.0,"avg_study":4.2,"avg_sleep":6.4,"avg_social":2.9,"pct_burnout_high":24.3,"doomscroll_nodoom":61.6,"doomscroll_doom":60.3,"pct_focused":26.2},"Semi-Urban":{"avg_exam":61.4,"avg_study":4.1,"avg_sleep":6.5,"avg_social":2.9,"pct_burnout_high":25.6,"doomscroll_nodoom":61.7,"doomscroll_doom":61.2,"pct_focused":27.5}},"High":{"All":{"avg_exam":84.5,"avg_study":4.7,"avg_sleep":6.7,"avg_social":2.5,"pct_burnout_high":17.1,"doomscroll_nodoom":85.1,"doomscroll_doom":83.6,"pct_focused":44.1},"Urban":{"avg_exam":84.1,"avg_study":4.7,"avg_sleep":6.6,"avg_social":2.5,"pct_burnout_high":13.6,"doomscroll_nodoom":85.7,"doomscroll_doom":81.3,"pct_focused":42.4},"Rural":{"avg_exam":85.0,"avg_study":4.7,"avg_sleep":6.7,"avg_social":2.3,"pct_burnout_high":18.0,"doomscroll_nodoom":85.5,"doomscroll_doom":84.2,"pct_focused":47.3},"Semi-Urban":{"avg_exam":84.3,"avg_study":4.7,"avg_sleep":6.8,"avg_social":2.6,"pct_burnout_high":19.3,"doomscroll_nodoom":84.0,"doomscroll_doom":85.0,"pct_focused":42.1}}};
+
+const VCOMBOS = {"All":{"All":{"mental":{"Distracted":790,"Burnout":755,"Focused":739,"Balanced":716},"career":{"Medical":55.6,"Research":55.0,"Business":54.7,"Arts":54.5,"Engineering":54.2},"stress_motiv":{"Low":{"stress":6.1,"motivation":4.9},"Medium":{"stress":5.3,"motivation":5.7},"High":{"stress":4.7,"motivation":6.6}}},"Urban":{"mental":{"Distracted":257,"Burnout":250,"Focused":238,"Balanced":227},"career":{"Business":56.2,"Research":55.3,"Engineering":54.5,"Arts":53.8,"Medical":53.4},"stress_motiv":{"Low":{"stress":6.2,"motivation":5.1},"Medium":{"stress":5.3,"motivation":5.9},"High":{"stress":4.9,"motivation":6.2}}},"Rural":{"mental":{"Distracted":272,"Focused":261,"Balanced":258,"Burnout":235},"career":{"Arts":57.5,"Medical":57.2,"Research":56.0,"Business":54.3,"Engineering":53.9},"stress_motiv":{"Low":{"stress":6.1,"motivation":4.8},"Medium":{"stress":5.4,"motivation":5.6},"High":{"stress":4.6,"motivation":6.7}}},"Semi-Urban":{"mental":{"Burnout":270,"Distracted":261,"Focused":240,"Balanced":231},"career":{"Medical":56.3,"Engineering":54.1,"Business":53.7,"Research":53.6,"Arts":52.3},"stress_motiv":{"Low":{"stress":6.0,"motivation":4.9},"Medium":{"stress":5.3,"motivation":5.6},"High":{"stress":4.7,"motivation":6.8}}}},"Low":{"All":{"mental":{"Burnout":426,"Distracted":323,"Balanced":277,"Focused":170},"career":{"Arts":37.6,"Medical":37.1,"Research":36.6,"Business":36.0,"Engineering":35.6},"stress_motiv":{"single":{"stress":6.1,"motivation":4.9}}},"Urban":{"mental":{"Burnout":147,"Distracted":98,"Balanced":90,"Focused":52},"career":{"Arts":39.4,"Business":37.3,"Research":37.0,"Medical":36.8,"Engineering":35.5},"stress_motiv":{"single":{"stress":6.2,"motivation":5.1}}},"Rural":{"mental":{"Burnout":118,"Distracted":113,"Balanced":91,"Focused":56},"career":{"Medical":37.0,"Research":36.8,"Business":36.5,"Arts":35.8,"Engineering":35.6},"stress_motiv":{"single":{"stress":6.1,"motivation":4.8}}},"Semi-Urban":{"mental":{"Burnout":161,"Distracted":112,"Balanced":96,"Focused":62},"career":{"Medical":37.5,"Arts":37.4,"Research":36.1,"Engineering":35.8,"Business":34.2},"stress_motiv":{"single":{"stress":6.0,"motivation":4.9}}}},"Medium":{"All":{"mental":{"Focused":373,"Distracted":360,"Balanced":345,"Burnout":282},"career":{"Arts":61.2,"Business":61.2,"Research":61.1,"Engineering":61.0,"Medical":60.9},"stress_motiv":{"single":{"stress":5.3,"motivation":5.7}}},"Urban":{"mental":{"Focused":130,"Distracted":124,"Balanced":108,"Burnout":91},"career":{"Research":61.2,"Medical":61.0,"Business":60.8,"Arts":60.7,"Engineering":60.6},"stress_motiv":{"single":{"stress":5.3,"motivation":5.9}}},"Rural":{"mental":{"Balanced":135,"Focused":126,"Distracted":121,"Burnout":99},"career":{"Arts":62.0,"Business":61.1,"Research":61.1,"Medical":60.7,"Engineering":60.1},"stress_motiv":{"single":{"stress":5.4,"motivation":5.6}}},"Semi-Urban":{"mental":{"Focused":117,"Distracted":115,"Balanced":102,"Burnout":92},"career":{"Engineering":62.6,"Business":61.8,"Research":61.1,"Arts":60.9,"Medical":60.9},"stress_motiv":{"single":{"stress":5.3,"motivation":5.6}}}},"High":{"All":{"mental":{"Focused":196,"Distracted":107,"Balanced":94,"Burnout":47},"career":{"Business":85.6,"Medical":84.7,"Arts":84.4,"Research":84.2,"Engineering":83.9},"stress_motiv":{"single":{"stress":4.7,"motivation":6.6}}},"Urban":{"mental":{"Focused":56,"Distracted":35,"Balanced":29,"Burnout":12},"career":{"Engineering":85.5,"Business":85.1,"Medical":84.1,"Arts":84.0,"Research":81.6},"stress_motiv":{"single":{"stress":4.9,"motivation":6.2}}},"Rural":{"mental":{"Focused":79,"Distracted":38,"Balanced":32,"Burnout":18},"career":{"Business":87.0,"Arts":85.1,"Medical":84.7,"Engineering":84.2,"Research":84.2},"stress_motiv":{"single":{"stress":4.6,"motivation":6.7}}},"Semi-Urban":{"mental":{"Focused":61,"Distracted":34,"Balanced":33,"Burnout":17},"career":{"Research":87.1,"Medical":85.1,"Business":84.5,"Arts":83.7,"Engineering":82.0},"stress_motiv":{"single":{"stress":4.7,"motivation":6.8}}}}};
+
+let activePerf = 'All';
+let activeCity = 'All';
+
+function getStats() { return COMBOS[activePerf][activeCity]; }
+function getVStats() { return VCOMBOS[activePerf][activeCity]; }
+
+function updateKPIs() {
+  const s = getStats();
+  const impact = (s.doomscroll_nodoom - s.doomscroll_doom).toFixed(1);
+  document.getElementById('kpi-exam').textContent = s.avg_exam;
+  document.getElementById('kpi-exam-d').textContent = activePerf === 'All' ? 'all students' : activePerf.toLowerCase() + ' performers';
+  document.getElementById('kpi-study').textContent = s.avg_study + 'h';
+  document.getElementById('kpi-burnout').textContent = s.pct_burnout_high + '%';
+  document.getElementById('kpi-doom').textContent = '−' + impact;
+  document.getElementById('kpi-focused').textContent = s.pct_focused + '%';
+  document.getElementById('profile-strip').textContent = `▸ ${s.avg_study}h study · ${s.avg_sleep}h sleep · ${s.avg_social}h social media`;
+}
+
+function renderCareerBars() {
+  const container = document.getElementById('career-bars');
+  const data = getVStats().career;
+  const max = Math.max(...Object.values(data)) * 1.05;
+  container.innerHTML = Object.entries(data).map(([name, val]) =>
+    `<div class="bar-item">
+      <div class="bar-name">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%"></div></div>
+      <div class="bar-val">${val}</div>
+    </div>`
+  ).join('');
+}
+
+function renderDonut() {
+  const canvas = document.getElementById('donut');
+  const ctx = canvas.getContext('2d');
+  const data = getVStats().mental;
+  const total = Object.values(data).reduce((a,b)=>a+b,0);
+  const colors = ['#6b58d0','#9d8fe8','#c4b9f7','#2d2060'];
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+  let angle = -Math.PI/2;
+  const cx=60,cy=60,r=52,inner=30;
+  ctx.clearRect(0,0,120,120);
+  values.forEach((v,i)=>{
+    const slice = v/total*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle=colors[i]; ctx.fill();
+    angle+=slice;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,inner,0,Math.PI*2);
+  ctx.fillStyle='#ffffff'; ctx.fill();
+  ctx.fillStyle='#2d2060'; ctx.font='700 12px Inter'; ctx.textAlign='center';
+  const total_k = total >= 1000 ? (total/1000).toFixed(1)+'k' : total;
+  ctx.fillText(total_k,cx,cy+4);
+  document.getElementById('donut-legend').innerHTML = labels.map((l,i)=>
+    `<div class="donut-leg-item"><div class="donut-dot" style="background:${colors[i]}"></div><span>${l} · ${(values[i]/total*100).toFixed(0)}%</span></div>`
+  ).join('');
+}
+
+function renderStressBars() {
+  const container = document.getElementById('stress-bars');
+  const sm = getVStats().stress_motiv;
+  if (sm.single) {
+    // single perf selected — show one bar pair
+    const s = sm.single;
+    container.innerHTML = `<div>
+      <div class="grouped-cat">${activePerf}</div>
+      <div class="grouped-row">
+        <div class="grouped-label" style="color:#e24b4a">stress</div>
+        <div class="grouped-track"><div class="grouped-fill" style="width:${s.stress/10*100}%;background:#e24b4a"></div></div>
+        <div class="grouped-val">${s.stress}</div>
+      </div>
+      <div class="grouped-row">
+        <div class="grouped-label" style="color:#639922">motivation</div>
+        <div class="grouped-track"><div class="grouped-fill" style="width:${s.motivation/10*100}%;background:#639922"></div></div>
+        <div class="grouped-val">${s.motivation}</div>
+      </div>
+    </div>`;
+  } else {
+    container.innerHTML = ['Low','Medium','High'].map(cat => {
+      const s = sm[cat];
+      return `<div>
+        <div class="grouped-cat">${cat}</div>
+        <div class="grouped-row">
+          <div class="grouped-label" style="color:#e24b4a">stress</div>
+          <div class="grouped-track"><div class="grouped-fill" style="width:${s.stress/10*100}%;background:#e24b4a"></div></div>
+          <div class="grouped-val">${s.stress}</div>
+        </div>
+        <div class="grouped-row">
+          <div class="grouped-label" style="color:#639922">motivation</div>
+          <div class="grouped-track"><div class="grouped-fill" style="width:${s.motivation/10*100}%;background:#639922"></div></div>
+          <div class="grouped-val">${s.motivation}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderDoomCards() {
+  const s = getStats();
+  const impact = (s.doomscroll_nodoom - s.doomscroll_doom).toFixed(1);
+  document.getElementById('doom-cards').innerHTML = `
+    <div class="doom-card">
+      <div class="doom-label">✅ no doomscrolling before sleep</div>
+      <div class="doom-value" style="color:#639922">${s.doomscroll_nodoom}</div>
+      <div class="doom-diff">avg exam score</div>
+    </div>
+    <div class="doom-card">
+      <div class="doom-label">📱 doomscrolling before sleep</div>
+      <div class="doom-value" style="color:#e24b4a">${s.doomscroll_doom}</div>
+      <div class="doom-diff">avg exam score · −${impact} pts gap</div>
+    </div>`;
+}
+
+function renderScatter() {
+  const canvas = document.getElementById('scatter');
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const pad={top:10,right:10,bottom:28,left:32};
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#ede8ff'; ctx.lineWidth=1;
+  [0,25,50,75,100].forEach(v=>{
+    const y=pad.top+(1-v/100)*(H-pad.top-pad.bottom);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
+    ctx.fillStyle='#a09ac4'; ctx.font='9px Inter'; ctx.textAlign='right';
+    ctx.fillText(v,pad.left-4,y+3);
+  });
+  [0,2,4,6,8,10].forEach(v=>{
+    const x=pad.left+(v/10)*(W-pad.left-pad.right);
+    ctx.beginPath(); ctx.moveTo(x,pad.top); ctx.lineTo(x,H-pad.bottom); ctx.stroke();
+    ctx.fillStyle='#a09ac4'; ctx.font='9px Inter'; ctx.textAlign='center';
+    ctx.fillText(v+'h',x,H-pad.bottom+14);
+  });
+  let pts = RAW.scatter;
+  if (activePerf !== 'All') pts = pts.filter(d=>d.cat===activePerf);
+  if (activeCity !== 'All') pts = pts.filter(d=>d.city===activeCity);
+  pts.forEach(d=>{
+    const x=pad.left+(d.x/10)*(W-pad.left-pad.right);
+    const y=pad.top+(1-d.y/100)*(H-pad.top-pad.bottom);
+    ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2);
+    ctx.fillStyle=perfColors[d.cat]+'bb'; ctx.fill();
+  });
+}
+
+function render() {
+  updateKPIs();
+  renderDoomCards();
+  renderScatter();
+  renderCareerBars();
+  renderDonut();
+  renderStressBars();
+}
+
+render();
+
+document.getElementById('perf-filters').addEventListener('click', e => {
+  const btn = e.target.closest('[data-perf]');
+  if (!btn) return;
+  document.querySelectorAll('[data-perf]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activePerf = btn.dataset.perf;
+  render();
+});
+
+document.getElementById('city-filters').addEventListener('click', e => {
+  const btn = e.target.closest('[data-city]');
+  if (!btn) return;
+  document.querySelectorAll('[data-city]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCity = btn.dataset.city;
+  render();
+});
+</script>
+</body>
+</html>
